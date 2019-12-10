@@ -14,18 +14,21 @@ if __name__ == '__main__':
     name = 'kalle'
     grade = '5'
     key = 'k'
+    REAL_SIGNATURE = '0bd7fb428bea810a03c0'
     URL = "https://eitn41.eit.lth.se:3119/ha4/addgrade.php"
     concat = bytes(name, encoding='utf8') + bytes(grade, encoding='utf8')
     signature = hmac.new(bytes(key, encoding='utf8'), concat, hashlib.sha1).hexdigest()[:20]
     
     elapsed = 0
-    signature = list(signature)
+    #signature = list(signature)
     bestChar = None
-    for i in range (0,20):
+    signature ='0bd7fb428bea810a03c0'
+    signature = list(signature)
+    for i in range (18,20):
         for char in '0123456789abcdef':
             signature[i] = char
             parameters = {'name':name, 'grade':grade, 'signature':''.join(signature)} 
-            average = getAverage(URL, parameters, 10)
+            average = getAverage(URL, parameters, 100)
             if (average > elapsed):
                 bestChar= char
                 elapsed = average
@@ -40,7 +43,8 @@ if __name__ == '__main__':
     parameters = {'name':name, 'grade':grade, 'signature':''.join(signature)}        
     result = requests.get(url = URL, params = parameters, verify=False)
     data = result.json()
-    if(data == '1'):
-        print("Success signature is:", ''.join(signature))
+    print(data)
+    if(data == 1):
+        print("Success! Signature is:", ''.join(signature))
     else:
         print("Unsuccessful answer from server is:", data)
